@@ -248,13 +248,13 @@ def unified_diff(path: str, before: str | None, after: str) -> str:
 
 def _fixable_sources(project: ProjectFiles) -> list[str]:
     """Ruff only touches source files: test helpers imported for pytest look unused, `__init__` re-exports too."""
-    return [p for p in project.source_python_files if PurePosixPath(p).name not in {"__init__.py", "conftest.py"}]
+    return [p for p in project.source_python_files if p.endswith(".py") and PurePosixPath(p).name not in {"__init__.py", "conftest.py"}]
 
 
 def build_fixes(project: ProjectFiles, issues: list[Issue], run_tools: bool = True) -> FixReport:
     wanted = {issue.rule_id for issue in issues}
     ruff = _ruff_fixable(project, _fixable_sources(project)) if run_tools else {}
-    candidates = set(project.python_files) if {"SEC012", "QLT007"} & wanted else set(ruff)
+    candidates = set(project.python_modules) if {"SEC012", "QLT007"} & wanted else set(ruff)   # notebooks are never patched
     files = [fix for path in sorted(candidates)
              if (fix := _python_fix(project, path, wanted, ruff.get(path)))]
     files += [fix for fix in (_gitignore_fix(project, wanted), _env_example_fix(project, wanted)) if fix]

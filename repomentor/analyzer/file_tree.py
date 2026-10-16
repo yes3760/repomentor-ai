@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
+from repomentor.analyzer.notebooks import NotebookMap, notebook_source
 from repomentor.models.analysis_result import FileInfo
 from repomentor.utils.constants import (
     IGNORED_DIRS,
@@ -18,6 +19,7 @@ from repomentor.utils.constants import (
     MAX_ANALYZED_FILES,
     MAX_FILE_SIZE,
     MAX_LOCK_FILE_SIZE,
+    MAX_NOTEBOOK_SIZE,
     TEXT_EXTENSIONS,
     TEXT_FILENAMES,
 )
@@ -33,6 +35,7 @@ class ProjectFiles:
     texts: dict[str, str] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     syntax_errors: dict[str, str] = field(default_factory=dict)
+    notebooks: dict[str, NotebookMap] = field(default_factory=dict)   # .ipynb path -> cell map of its virtual script
     _trees: dict[str, ast.Module | None] = field(default_factory=dict, repr=False)
 
     @property
@@ -41,7 +44,13 @@ class ProjectFiles:
 
     @property
     def python_files(self) -> list[str]:
-        return [p for p in self.texts if p.endswith(".py")]
+        """`.py` files and Python notebooks (whose text is the virtual script of their code cells)."""
+        return [p for p in self.texts if p.endswith(".py") or p in self.notebooks]
+
+    @property
+    def python_modules(self) -> list[str]:
+        """Real `.py` files only: what external tools (Ruff, Bandit) and patches may touch."""
+        return [p for p in self.python_files if p.endswith(".py")]
 
     @property
     def source_python_files(self) -> list[str]:
@@ -107,6 +116,7 @@ def _is_ignored_dir(name: str) -> bool:
 def _is_text_candidate(path: PurePosixPath) -> bool:
     return (
         path.suffix.lower() in TEXT_EXTENSIONS
+        or path.suffix.lower() == ".ipynb"
         or path.name in TEXT_FILENAMES
         or path.name.lower().startswith(("readme", "license", "licence", "changelog", "contributing", "requirements", ".env"))
     )
@@ -115,7 +125,7 @@ def _is_text_candidate(path: PurePosixPath) -> bool:
 def _read_priority(path: str) -> tuple[int, int, str]:
     """Python sources and project metadata first, everything else after."""
     p = PurePosixPath(path)
-    if p.suffix == ".py":
+    if p.suffix in {".py", ".ipynb"}:
         rank = 0
     elif p.name.lower().startswith(("readme", "requirements", "license", "pyproject", "setup", ".env")) or p.name in TEXT_FILENAMES:
         rank = 1
@@ -178,7 +188,7 @@ def _register(walk: _Walk, rel: str, full: Path) -> None:
     walk.files.append(info)
     if not _is_text_candidate(pure):
         return
-    limit = MAX_LOCK_FILE_SIZE if pure.name in LOCK_FILES else MAX_FILE_SIZE
+    limit = MAX_LOCK_FILE_SIZE if pure.name in LOCK_FILES else MAX_NOTEBOOK_SIZE if pure.suffix.lower() == ".ipynb" else MAX_FILE_SIZE
     if size > limit:
         info.skipped_reason = f"Dosya çok büyük ({size // 1024} KB)"
     else:
@@ -200,8 +210,27 @@ def _read_texts(project: ProjectFiles, candidates: list[tuple[str, Path]]) -> No
         if text is None:
             by_path[rel].skipped_reason = "İkili (binary) dosya"
             continue
+        if rel.endswith(".ipynb"):
+            text = _notebook_text(project, rel, text)
+            if text is None:
+                by_path[rel].skipped_reason = "Python notebook'u değil ya da okunamadı"
+                continue
         project.texts[rel] = text
         by_path[rel].lines = len(text.splitlines())
+
+
+def _notebook_text(project: ProjectFiles, rel: str, raw: str) -> str | None:
+    """The virtual script of a notebook's code cells; outputs are dropped here."""
+    converted = notebook_source(raw)
+    if converted is None:
+        return None
+    text, mapping = converted
+    project.notebooks[rel] = mapping
+    if mapping.skipped:
+        cells = ", ".join(str(c) for c in mapping.skipped[:6]) + (" …" if len(mapping.skipped) > 6 else "")
+        project.warnings.append(f"`{rel}`: {len(mapping.skipped)} kod hücresi Python olarak ayrıştırılamadığı ya da başka bir dil "
+                                f"(%%bash, %%sql…) kullandığı için atlandı (hücre {cells}).")
+    return text
 
 
 def scan_project(root: Path) -> ProjectFiles:

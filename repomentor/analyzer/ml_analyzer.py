@@ -120,7 +120,7 @@ def _check_split(call: ast.Call, scope: _Scope, cv_fit: bool) -> None:
     for name in {n for arg in [*args, *(kw.value for kw in call.keywords)] for n in _names(arg)}:
         if name in scope.leaky:
             scope.findings.append(MLFinding("LEAK001", scope.file, scope.leaky[name],
-                                            f"`{name}` tüm veriyle öğrenilen istatistiklerle dönüştürüldü, sonra {where} girdi (satır {call.lineno})"))
+                                            f"`{name}` tüm veriyle öğrenilen istatistiklerle dönüştürüldü, sonra {where} girdi ({scope.file}:{call.lineno})"))
 
 
 def _check_fit(call: ast.Call, scope: _Scope, targets: list[str]) -> None:

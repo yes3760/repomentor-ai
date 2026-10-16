@@ -253,7 +253,7 @@ def find_duplicates(project: ProjectFiles, window: int = DUPLICATE_WINDOW, limit
 # --- Ruff ---------------------------------------------------------------------------------
 
 def run_ruff(project: ProjectFiles, report: QualityReport) -> list[dict]:
-    targets = [p for p in project.python_files if project.tree(p) is not None]
+    targets = [p for p in project.python_modules if project.tree(p) is not None]   # Ruff reads files from disk
     if not targets:
         return []
     cmd = [

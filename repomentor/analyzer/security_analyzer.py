@@ -30,7 +30,7 @@ from repomentor.utils.text_utils import (
     mask_value,
 )
 
-SECRET_SCAN_SUFFIXES = {".py", ".json", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".env", ".txt", ".sh", ".js", ".ts"}
+SECRET_SCAN_SUFFIXES = {".py", ".ipynb", ".json", ".yml", ".yaml", ".toml", ".cfg", ".ini", ".env", ".txt", ".sh", ".js", ".ts"}
 EXAMPLE_MARKERS = ("example", "sample", "template", "dist")
 ENV_IGNORE_PATTERNS = {".env", ".env*", "*.env", ".env.*", ".env.local"}
 MAX_LOCATIONS = 15
@@ -306,7 +306,7 @@ def _bandit_issue(test_id: str, results: list[dict]) -> Issue:
 
 def run_bandit(project: ProjectFiles, report: SecurityReport, already_flagged: set[tuple[str, int]]) -> list[Issue]:
     """Bandit findings not already reported by our own rules, grouped by check id."""
-    targets = [p for p in project.source_python_files if project.tree(p) is not None]
+    targets = [p for p in project.source_python_files if p.endswith(".py") and project.tree(p) is not None]   # Bandit reads files from disk
     if not targets:
         return []
     grouped: dict[str, list[dict]] = defaultdict(list)

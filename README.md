@@ -33,7 +33,7 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
 
 ## Özellikler
 
-- **İki giriş yolu:** public GitHub bağlantısı (alt klasör dahil) veya ZIP yükleme, ayrıca 4 hazır örnek proje
+- **İki giriş yolu:** public GitHub bağlantısı (alt klasör dahil) veya ZIP yükleme, ayrıca 5 hazır örnek proje
 - **Proje tanıma:** proje türü, framework (FastAPI, Flask, Django, Streamlit…), veri tabanı, ML kütüphaneleri, test aracı, Docker, CI
 - **Veri akışı (taint) analizi:** kullanıcı girdisinin değişkenler ve fonksiyonlar boyunca izlenip `eval`, SQL, kabuk komutu, dosya yolu, `pickle`, şablon, SSRF, yönlendirme veya HTML'e ulaşıp ulaşmadığı **kaynaktan hedefe yoluyla** gösterilir
 - **Kod kalitesi:** bilişsel ve döngüsel karmaşıklık, Maintainability Index, uzun fonksiyonlar, çok parametreli fonksiyonlar, satır bazlı tekrar ve **yapısal kopyalar**, tip ipucu kapsamı, çıplak `except`, Ruff lint
@@ -42,6 +42,8 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
 - **Veri bilimi kontrolleri:** train/test ayrımından önce `fit` edilen ölçekleyiciler ve test verisine `fit` gibi **veri sızıntıları**; `iterrows`, `apply(axis=1)`, zincirli indeksle atama, `DataFrame.append` gibi yavaş/hatalı pandas kalıpları
 - **README komut doğrulayıcı:** README'deki `python main.py`, `uvicorn app.main:app`, `pip install -r …`, `make test` gibi komutların projede gerçekten çalışıp çalışmayacağı (`cd` adımları izlenerek, hiçbir komut çalıştırılmadan)
 - **Otomatik düzeltme yaması:** `yaml.load` → `yaml.safe_load`, çıplak `except`, eksik `.gitignore` / `.env.example` ve Ruff'ın güvenli düzeltmeleri; proje dosyalarına dokunulmadan `git apply` ile uygulanacak bir yama olarak
+- **Jupyter Notebook desteği:** kod hücreleri sırasıyla tek bir betik gibi analiz edilir; hücreler arası veri sızıntısı, veri akışı ve notebook'lara yazılmış anahtarlar yakalanır, bulgular "hücre 7, satır 4" olarak gösterilir. `%matplotlib`, `!pip` gibi IPython komutları analizi bozmaz
+- **GitHub Action ve PR yorumu:** her pull request'te temel dala göre skor farkı, yeni ve giderilen bulgular tek bir yorumda; en düşük skor ve en fazla düşüş kalite kapısı olarak kullanılabilir
 - **Mimari:** modül bağımlılık grafiği, **döngüsel import** tespiti ve modül bağlılık ölçütleri (Ca, Ce, kararsızlık)
 - **Teknik borç ve öncelik:** SQALE yöntemiyle A–E bakım notu ve "önce bu dosyalara bakın" risk sıralaması
 - **Güvenlik:** gizli anahtar taraması (maskelenmiş; adı geçmeyen rastgele anahtarlar için **Shannon entropisi**), depoya girmiş `.env`, `.gitignore` kontrolü, AST kuralları (`eval`, `shell=True`, string ile kurulmuş SQL, `pickle`, `yaml.load`, `verify=False`, debug modu), Bandit
@@ -271,6 +273,16 @@ Yalnızca çalışan bir programı bozamayacak düzeltmeler yapılır:
 
 `== None` → `is None` gibi pandas nesnelerinde davranışı değiştirebilecek "unsafe" düzeltmeler bilinçli olarak yapılmaz. Dosyalar bayt olarak yeniden okunur, böylece CRLF satır sonları ve Türkçe karakterlerin sütunları korunur. Düzeltilen her Python dosyasının hâlâ ayrıştırılabildiği kontrol edilir. Çıktı, `git apply` / `patch -p1` ile uyumlu bir yamadır ve **proje dosyalarına hiçbir zaman yazılmaz**.
 
+### 12. Jupyter Notebook'lar — `notebooks.py`
+
+Notebook hücreleri ortak bir isim alanında yukarıdan aşağı çalışır: 7. hücrede `fit` edilen ölçekleyici ile 9. hücredeki `train_test_split` tek bir sızıntıdır. Bu yüzden kod hücreleri sırasıyla, her biri `# %% [hücre N]` işaretiyle başlayan tek bir sanal betiğe dizilir ve bütün analizler onu bir `.py` dosyası gibi okur.
+
+- `%matplotlib inline` ve `!pip install` satırları `pass` olur, `files = !ls` → `files = None`; satır numaraları kaymaz.
+- `%%time` gibi Python kalan hücre komutları korunur; `%%bash`, `%%sql` gibi başka dile geçen hücreler ve ayrıştırılamayan hücreler boş bırakılıp raporda listelenir.
+- Python dışı çekirdekler (R, Julia) ve hücre çıktıları okunmaz; çıktılar (görseller) yüzünden büyük notebook'lar için boyut sınırı 5 MB'tır.
+- Analiz bitince sonuçtaki her sanal satır, konumlarda ve bulgu metinlerinde "`analiz.ipynb › hücre 9:2`" biçimine çevrilir.
+- Ruff, Bandit ve otomatik düzeltme diskteki dosyayı okuduğu için yalnızca `.py` dosyalarında çalışır.
+
 ## Ücretsiz yapay zekâ seçenekleri
 
 | Sağlayıcı | Maliyet | Gizlilik | Not |
@@ -343,6 +355,8 @@ python -m repomentor ./projem --format csv -o rapor.csv
 python -m repomentor . --min-score 80                             # skor < 80 ise çıkış kodu 1
 python -m repomentor ./projem --no-osv                            # bağımlılık taraması kapalı: hiçbir ağ isteği yapılmaz
 python -m repomentor ./projem --fix-patch duzeltmeler.patch       # güvenli düzeltmeleri yama olarak yaz
+python -m repomentor ./projem --baseline ./projem-eski --format pr  # iki sürümü karşılaştıran kısa özet
+python -m repomentor . --baseline https://github.com/yes3760/repomentor-ai --max-drop 3   # skor 3 puandan fazla düşerse çıkış kodu 1
 ```
 
 Yamayı inceledikten sonra proje klasöründe uygulayın:
@@ -358,6 +372,29 @@ Bu depo kendi CI'ında kendini analiz eder ([.github/workflows/ci.yml](.github/w
 ```yaml
 - run: python -m repomentor . --min-score 80 -o repomentor-report.md
 ```
+
+### GitHub Action: pull request yorumu
+
+Kendi deponuzda her pull request'i RepoMentor'a inceletmek için `.github/workflows/repomentor.yml` oluşturun:
+
+```yaml
+name: RepoMentor
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: yes3760/repomentor-ai@main
+        with:
+          min-score: "70"   # isteğe bağlı: skor bunun altındaysa iş başarısız olur
+          max-drop: "3"     # isteğe bağlı: PR skoru 3 puandan fazla düşürürse iş başarısız olur
+```
+
+Action, PR'ın temel dalını ayrı bir klasöre çekip iki sürümü karşılaştırır. Skor farkını, kategori puanlarını, yeni ve giderilen bulguları tek bir yorumda yazar; her push'ta yeni yorum açmak yerine aynı yorumu günceller. Rapor iş özetine (job summary) de eklenir; fork'lardan gelen PR'larda yorum izni olmadığında bile oradan okunabilir. Diğer girdiler: `path` (analiz edilecek klasör), `osv` (`"false"`: bağımlılık taraması kapalı), `comment` (`"false"`: yalnızca iş özeti). Çıktılar: `score`, `score-delta`. Bu depo kendi PR'larında aynı Action'ı kullanır ([.github/workflows/repomentor.yml](.github/workflows/repomentor.yml)).
 
 ## Skor nasıl hesaplanır?
 
@@ -381,7 +418,7 @@ Karmaşıklık ve uzunluk cezaları **etkilenen fonksiyonların oranına** göre
 
 Örnek projelerle doğrulama: temiz FastAPI projesi **97**, orta seviye Streamlit projesi **76**, veri sızıntılı ML projesi **72**, sorunlu Flask projesi **23** (bağımlılık taraması kapalıyken). RepoMentor kendini **96** ile geçer. Tarama açıkken orta seviye proje, sabitlediği eski `streamlit` ve `pytest` sürümlerindeki güncel açıklar nedeniyle daha düşük puan alır.
 
-> Örnek projelerdeki hatalar demo amacıyla **bilerek** yazılmıştır. `examples/problematic_project`: kodda açık anahtar, `eval` / SQL / kabuk komutu enjeksiyonu, hiç kapatılmayan SQLite bağlantısı (`ogrenci_bul`), `return` sonrası asla çalışmayan bir satır (`hava_durumu`), çıplak `except`, `yaml.load` ve açıklı paket sürümleri (`PyYAML==5.3`, `flask==0.12.2`, `requests==2.19.1`). `examples/ml_project`: veri bölünmeden önce `fit` edilen ölçekleyici, test verisine `fit` ve yavaş pandas kalıpları. GitHub, depoyu gönderdiğinizde açıklı sürümler için Dependabot uyarısı gösterebilir; "test/demo amaçlı" olarak kapatabilirsiniz.
+> Örnek projelerdeki hatalar demo amacıyla **bilerek** yazılmıştır. `examples/problematic_project`: kodda açık anahtar, `eval` / SQL / kabuk komutu enjeksiyonu, hiç kapatılmayan SQLite bağlantısı (`ogrenci_bul`), `return` sonrası asla çalışmayan bir satır (`hava_durumu`), çıplak `except`, `yaml.load` ve açıklı paket sürümleri (`PyYAML==5.3`, `flask==0.12.2`, `requests==2.19.1`). `examples/ml_project`: veri bölünmeden önce `fit` edilen ölçekleyici, test verisine `fit` ve yavaş pandas kalıpları. `examples/notebook_project`: hücreler arasında veri sızıntısı, notebook'a yazılmış sahte bir anahtar ve kullanılmayan bir fonksiyon. GitHub, depoyu gönderdiğinizde açıklı sürümler için Dependabot uyarısı gösterebilir; "test/demo amaçlı" olarak kapatabilirsiniz.
 
 ## Güvenlik ve gizlilik
 
@@ -413,7 +450,7 @@ Karmaşıklık ve uzunluk cezaları **etkilenen fonksiyonların oranına** göre
   Amaç yanlış alarmdan kaçınmaktır; bulunamayan akış, hatalı bir uyarıdan daha az zararlıdır.
 - Kontrol akışı analizi yol duyarsızdır: `if acildi: f.close()` gibi bayrakla korunan kapatmalar bilinçli kabul edilir, `with` dışındaki istisnalar yalnızca `try` bloklarında modellenir.
 - Çağrı grafiği `eval`, eklenti sistemleri ve string ile yapılan çağrıları göremez; "kullanılmıyor" denen kodu silmeden önce bu tür kullanımları kontrol edin. Statik test erişimi satır kapsamı değildir.
-- Jupyter Notebook içerikleri kalite analizine dahil edilmez.
+- Notebook'larda yalnızca kod hücreleri okunur; başka dile geçen ya da ayrıştırılamayan hücreler atlanır ve raporda listelenir. Ruff, Bandit ve otomatik düzeltme notebook'larda çalışmaz.
 - Bağımlılık taraması yalnızca **sürümü kesin olan** paketleri kontrol eder. `>=1.0` gibi aralıklarda hangi sürümün kurulacağı bilinemez; bu paketler tahmin yerine "kontrol edilemedi" olarak listelenir. Dolaylı (transitive) bağımlılıklar yalnızca kilit dosyası varsa kontrol edilir.
 - Açık verisi her gün güncellendiği için aynı proje farklı günlerde farklı güvenlik skoru alabilir.
 
@@ -424,6 +461,7 @@ Analizden hariç tutmak istediğiniz yolları kök dizindeki `.repomentorignore`
 ```text
 repomentor-ai/
 ├── app.py                     # Streamlit giriş noktası
+├── action.yml                 # GitHub Action: PR yorumu ve kalite kapısı
 ├── repomentor/
 │   ├── analyzer/
 │   │   ├── repository_loader.py   # ZIP / GitHub, güvenli açma
@@ -440,6 +478,8 @@ repomentor-ai/
 │   │   ├── ml_analyzer.py         # veri sızıntısı, pandas anti-pattern'leri
 │   │   ├── readme_commands.py     # README komut doğrulayıcı
 │   │   ├── autofix.py             # güvenli düzeltmeler, unified diff yaması
+│   │   ├── notebooks.py           # notebook kod hücreleri → sanal betik, bulguları hücrelere geri çevirme
+│   │   ├── pr_report.py           # pull request özeti: skor farkı, yeni / giderilen bulgular
 │   │   ├── code_metrics.py        # bilişsel karmaşıklık, yapısal kopya, tip ipucu kapsamı
 │   │   ├── import_graph.py        # modül grafiği, Tarjan ile döngü tespiti, bağlılık ölçütleri
 │   │   ├── insights.py            # teknik borç (SQALE) ve riskli dosya sıralaması
@@ -456,7 +496,7 @@ repomentor-ai/
 │   ├── models/                    # Issue, AnalysisResult (dataclass)
 │   ├── ui/                        # Streamlit bileşenleri, grafikler, sekmeler
 │   └── cli.py
-├── examples/                  # temiz / orta / ML / sorunlu demo projeleri
+├── examples/                  # temiz / orta / ML / notebook / sorunlu demo projeleri
 ├── docs/                      # ekran görüntüleri, LinkedIn metinleri
 ├── tests/                     # pytest
 └── CHANGELOG.md · CONTRIBUTING.md · SECURITY.md
@@ -469,7 +509,7 @@ pytest
 ruff check .
 ```
 
-Test paketi (262 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
+Test paketi (283 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
 
 ## Ücretsiz yayınlama
 
@@ -491,13 +531,13 @@ docker run -p 8501:8501 -e OLLAMA_BASE_URL=http://host.docker.internal:11434 rep
 ## Yol haritası
 
 - [ ] JavaScript / TypeScript desteği
-- [ ] Pull request analizi ve iki commit arasındaki kalite farkı
-- [ ] GitHub Action olarak yayınlama (PR yorumu)
+- [x] Pull request analizi ve iki commit arasındaki kalite farkı
+- [x] GitHub Action olarak yayınlama (PR yorumu)
 - [ ] Geçmiş raporları saklama ve trend grafiği
 - [x] Oturum içi rapor geçmişi ve iki rapor karşılaştırması
 - [x] Güvenli otomatik düzeltme yaması
 - [ ] Daha fazla otomatik düzeltme (kaynak sızıntısı için `with`, sabit anahtarı ortam değişkenine taşıma)
-- [ ] Notebook (`.ipynb`) kod hücrelerinin analizi
+- [x] Notebook (`.ipynb`) kod hücrelerinin analizi
 - [ ] Çoklu dil (TR/EN) arayüz
 
 ## Katkı ve güvenlik

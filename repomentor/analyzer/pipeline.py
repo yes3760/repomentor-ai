@@ -17,6 +17,7 @@ from repomentor.analyzer.file_tree import scan_project
 from repomentor.analyzer.import_graph import analyze_imports, cycle_issues
 from repomentor.analyzer.insights import hotspots, technical_debt
 from repomentor.analyzer.ml_analyzer import analyze_data_science
+from repomentor.analyzer.notebooks import relocate
 from repomentor.analyzer.organization_analyzer import analyze_organization
 from repomentor.analyzer.project_detector import detect_project
 from repomentor.analyzer.quality_analyzer import analyze_quality
@@ -129,7 +130,7 @@ def analyze_project(
     progress("Otomatik düzeltme yaması hazırlanıyor…", 0.96)
     fixes = build_fixes(ctx.project, ctx.issues, run_tools)
     progress("Rapor hazırlanıyor…", 0.97)
-    return AnalysisResult(
+    result = AnalysisResult(
         project=ctx.info,
         files=ctx.project.files,
         documentation=ctx.docs,
@@ -154,3 +155,5 @@ def analyze_project(
         debt=technical_debt(ctx.issues, ctx.quality.sloc),
         hotspots=hotspots(ctx.quality, ctx.issues),
     )
+    relocate(result, ctx.project.notebooks)   # virtual notebook lines -> "hücre N:M"
+    return result

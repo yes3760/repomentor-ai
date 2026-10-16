@@ -107,7 +107,7 @@ _RULES = [
          "Ortak kullanılan parçayı üçüncü bir modüle taşıyın, bağımlılığı tek yöne çevirin (ör. `models` hiçbir şeyi import etmesin) "
          "ya da son çare olarak import'u kullanıldığı fonksiyonun içine alın.", 45),
     Rule("ORG007", "Proje yalnızca Jupyter Notebook'lardan oluşuyor", "info", "organization",
-         "Notebook içerikleri bu sürümde kod kalitesi analizine dahil edilmiyor. Ayrıca yeniden kullanılabilir kod notebook'larda saklı kalır.",
+         "Notebook'lar analiz edildi, ancak yeniden kullanılabilir kod notebook'larda saklı kalıyor: başka bir projeden import edilemez, test edilemez ve sürüm farkları okunması zor JSON değişiklikleri olarak görünür.",
          "Tekrar kullanılan fonksiyonları `.py` modüllerine taşıyıp notebook'tan import edin.", 60),
 
     # --- Security: secrets & configuration -------------------------------------------------

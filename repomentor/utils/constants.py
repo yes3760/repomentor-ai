@@ -9,6 +9,7 @@ MAX_UNCOMPRESSED_BYTES = 200 * 1024 * 1024    # zip-bomb guard
 MAX_ARCHIVE_ENTRIES = 10_000
 MAX_FILE_SIZE = 200_000                        # bytes; larger files are listed, not parsed
 MAX_LOCK_FILE_SIZE = 3_000_000                 # dependency lock files are large but only parsed, never sent anywhere
+MAX_NOTEBOOK_SIZE = 5_000_000                  # notebooks carry outputs (images); only the code cells are kept
 MAX_ANALYZED_FILES = 400                       # text files read into memory
 TOOL_TIMEOUT_SECONDS = 90                      # bandit / ruff subprocess timeout
 

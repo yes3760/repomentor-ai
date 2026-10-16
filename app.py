@@ -24,6 +24,7 @@ EXAMPLES = {
     "medium_project": ("film-recommender", "Streamlit · scikit-learn", "Çalışan uygulama, sınırlı test ve dokümantasyon.", "Kısmi kapsam", "warning"),
     "problematic_project": ("flask-notes", "Flask · SQLite", "Açık anahtar, SQL/eval enjeksiyonu, kapatılmayan bağlantı ve ölü kod içeren örnek.", "Riskli kod", "critical"),
     "ml_project": ("churn-model", "pandas · scikit-learn", "Veri sızıntısı ve yavaş pandas kalıpları içeren model eğitimi.", "Veri sızıntısı", "warning"),
+    "notebook_project": ("churn-notebook", "Jupyter · pandas · scikit-learn", "Hücreler arasında veri sızıntısı olan keşif notebook'u.", "Notebook", "warning"),
 }
 
 st.set_page_config(page_title=APP_NAME, page_icon=str(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")

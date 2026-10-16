@@ -115,11 +115,12 @@ def _hits_in_config(path: str, text: str) -> list[EntropyHit]:
 def find_high_entropy(project: ProjectFiles, skip: set[tuple[str, int]]) -> list[EntropyHit]:
     """Random-looking values outside tests; `skip` holds lines another secret rule already reported."""
     hits: list[EntropyHit] = []
+    python = set(project.python_files)
     for path, text in project.texts.items():
         name = PurePosixPath(path).name.lower()
         if project.is_test(path) or any(marker in name for marker in ("example", "sample", "template", "lock")):
             continue
-        if path.endswith(".py") and (tree := project.tree(path)) is not None:
+        if path in python and (tree := project.tree(path)) is not None:
             hits += _hits_in_python(path, tree)
         elif PurePosixPath(path).suffix in CONFIG_SUFFIXES:
             hits += _hits_in_config(path, text)

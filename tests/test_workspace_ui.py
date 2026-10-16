@@ -101,3 +101,11 @@ def test_data_science_section_for_ml_projects():
     assert "##### Veri bilimi kontrolleri" in [m.value for m in at.markdown]
     assert any("veri sızıntısı" in e.value for e in at.error)
     assert not at.exception
+
+
+def test_notebook_demo_runs():
+    at = workspace()
+    at.button(key="demo-notebook_project-run").click().run()
+    assert not at.exception
+    section(at, "Teknik analiz")
+    assert "##### Veri bilimi kontrolleri" in [m.value for m in at.markdown]

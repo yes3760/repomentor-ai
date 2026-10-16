@@ -1,0 +1,95 @@
+name: "RepoMentor AI"
+description: "Python projesini statik olarak analiz eder; pull request'lerde skor farkını ve yeni bulguları yorum olarak yazar."
+author: "Yunus Emre Sevindik"
+branding:
+  icon: "compass"
+  color: "yellow"
+
+inputs:
+  path:
+    description: "Analiz edilecek klasör (depo köküne göre)"
+    default: "."
+  min-score:
+    description: "Skor bu değerin altındaysa adım başarısız olur (boş: kontrol yok)"
+    default: ""
+  max-drop:
+    description: "Pull request skoru temel dala göre bu kadardan fazla düşürürse adım başarısız olur (boş: kontrol yok)"
+    default: ""
+  osv:
+    description: "Bağımlılık açıklarını OSV.dev'de ara; yalnızca paket adı ve sürümü gönderilir"
+    default: "true"
+  comment:
+    description: "Pull request'e yorum yaz; aynı yorum her çalışmada güncellenir"
+    default: "true"
+  github-token:
+    description: "Yorum yazmak için kullanılan token (pull-requests: write izni gerekir)"
+    default: ${{ github.token }}
+
+outputs:
+  score:
+    description: "Genel skor (0-100)"
+    value: ${{ steps.analyse.outputs.score }}
+  score-delta:
+    description: "Temel dala göre skor farkı (pull request dışında 0)"
+    value: ${{ steps.analyse.outputs.score-delta }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install RepoMentor AI
+      shell: bash
+      run: python -m pip install --quiet --disable-pip-version-check -r "$GITHUB_ACTION_PATH/requirements.txt"
+
+    - name: Check out the base branch for comparison
+      id: base
+      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      run: |
+        git fetch --no-tags --depth=1 origin "$BASE_SHA"
+        git worktree add --detach "$RUNNER_TEMP/repomentor-base" "$BASE_SHA"
+        echo "dir=$RUNNER_TEMP/repomentor-base" >> "$GITHUB_OUTPUT"
+
+    - name: Analyse
+      id: analyse
+      shell: bash
+      env:
+        INPUT_DIR: ${{ inputs.path }}
+        MIN_SCORE: ${{ inputs.min-score }}
+        MAX_DROP: ${{ inputs.max-drop }}
+        OSV: ${{ inputs.osv }}
+        BASE_DIR: ${{ steps.base.outputs.dir }}
+      run: |
+        comment="$RUNNER_TEMP/repomentor-comment.md"
+        args=("$GITHUB_WORKSPACE/$INPUT_DIR" --format pr --output "$comment")
+        if [ -n "$BASE_DIR" ]; then args+=(--baseline "$BASE_DIR/$INPUT_DIR"); fi
+        if [ -n "$MIN_SCORE" ]; then args+=(--min-score "$MIN_SCORE"); fi
+        if [ -n "$MAX_DROP" ] && [ -n "$BASE_DIR" ]; then args+=(--max-drop "$MAX_DROP"); fi
+        if [ "$OSV" != "true" ]; then args+=(--no-osv); fi
+        status=0
+        (cd "$GITHUB_ACTION_PATH" && python -m repomentor "${args[@]}") || status=$?
+        if [ -f "$comment" ]; then cat "$comment" >> "$GITHUB_STEP_SUMMARY"; fi
+        echo "status=$status" >> "$GITHUB_OUTPUT"
+
+    - name: Comment on the pull request
+      if: (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') && inputs.comment == 'true'
+      continue-on-error: true   # pull requests from forks get a read-only token; the job summary still has the report
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        comment="$RUNNER_TEMP/repomentor-comment.md"
+        gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$comment" --edit-last \
+          || gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$comment"
+
+    - name: Apply quality gates
+      shell: bash
+      env:
+        STATUS: ${{ steps.analyse.outputs.status }}
+      run: exit "$STATUS"

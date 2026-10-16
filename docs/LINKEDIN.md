@@ -13,8 +13,10 @@ Aşağıdaki metinler projede **gerçekten bulunan** özelliklere dayanır. Kend
 - Proje geneli bir çağrı grafiği kurarak kullanılmayan kodu ve hiçbir testin ulaşmadığı fonksiyonları testleri çalıştırmadan buldum; skorda test/fonksiyon oranının yerine bu statik test erişimini kullandım.
 - Fonksiyon başına kontrol akış grafiği (try/finally, döngüler, match dahil) üzerine erişilemeyen kod ve kapatılmayan dosya/bağlantı analizleri yazdım; requests ve pandas dahil 27 açık kaynak kütüphanede elle doğrulanmış 6 gerçek hata buldu (ör. requests'te hiç kapatılmayan bir `ZipFile`).
 - scikit-learn kodunda train/test ayrımından önce `fit` edilen ölçekleyicileri ve test verisine `fit` gibi veri sızıntılarını deyim sırasıyla izleyerek tespit eden bir analiz ve pandas anti-pattern kuralları geliştirdim.
+- Jupyter Notebook kod hücrelerini tek bir sanal betiğe dizip bütün analizlerden geçiren ve bulguları hücre numarasına geri çeviren bir katman yazdım; hücreler arasındaki veri sızıntılarını yakalıyor.
+- Pull request'lerde temel dalla karşılaştırıp skor farkını ve yeni bulguları yorum olarak yazan bir GitHub Action geliştirdim; skor düşüşünü kalite kapısı olarak kullanıyor.
 - README'deki kurulum komutlarını çalıştırmadan projeye karşı doğrulayan bir denetleyici, Shannon entropisiyle adı geçmeyen API anahtarlarını bulan bir tarayıcı ve güvenli düzeltmeleri `git apply` ile uygulanabilir bir yama olarak üreten bir otomatik düzeltme modülü yazdım.
-- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 262 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
+- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 283 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
 
 ## LinkedIn – proje açıklaması (kısa)
 
@@ -34,6 +36,8 @@ RepoMentor AI'a bir GitHub bağlantısı veya ZIP verdiğinizde:
 • Erken return ya da hata yolunda kapatılmayan dosya ve veritabanı bağlantılarını yakalıyor
 • Makine öğrenmesi projelerinde train/test veri sızıntısını tespit ediyor (ölçülen başarıyı sessizce şişiren klasik hata)
 • README'deki kurulum komutlarının gerçekten çalışıp çalışmayacağını kontrol ediyor
+• Jupyter Notebook'ları hücre hücre inceliyor; hücreler arası veri sızıntısını yakalıyor
+• GitHub Action olarak her pull request'e "skor 82 → 79, 2 yeni bulgu" yorumu yazıyor
 • Güvenli düzeltmeleri, kodunuza dokunmadan `git apply` ile uygulanacak bir yama olarak veriyor
 • Test ve README durumunu değerlendiriyor
 • 100 üzerinden, her puanını gerekçelendiren bir skor veriyor

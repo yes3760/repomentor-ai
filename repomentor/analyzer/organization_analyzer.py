@@ -40,7 +40,9 @@ def _dependency_issue(project: ProjectFiles, info: ProjectInfo) -> Issue | None:
 
 
 def _needs_entry_point(project: ProjectFiles, info: ProjectInfo) -> bool:
-    return not info.entry_points and bool(project.source_python_files) and info.project_type != "Python kütüphanesi / paketi"
+    """A notebook is its own entry point; only `.py` projects need a main.py / app.py."""
+    has_modules = any(p.endswith(".py") for p in project.source_python_files)
+    return not info.entry_points and has_modules and info.project_type != "Python kütüphanesi / paketi"
 
 
 def _wants_docker(info: ProjectInfo) -> bool:
@@ -58,6 +60,6 @@ def analyze_organization(project: ProjectFiles, info: ProjectInfo) -> list[Issue
         make_issue("ORG004", values={"count": len(project.source_python_files)}) if is_flat_layout(project) else None,
         make_issue("ORG005", [Location("Dockerfile")]) if _wants_docker(info) else None,
         make_issue("ORG006") if not info.python_version and info.dependency_files else None,
-        make_issue("ORG007", [Location(notebooks[0])]) if notebooks and not project.source_python_files else None,
+        make_issue("ORG007", [Location(notebooks[0])]) if notebooks and not any(p.endswith(".py") for p in project.source_python_files) else None,
     ]
     return [issue for issue in candidates if issue is not None]

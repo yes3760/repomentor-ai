@@ -4,11 +4,18 @@ Bu projedeki önemli değişiklikler burada tutulur. Biçim [Keep a Changelog](h
 
 ## [Yayınlanmamış]
 
+### Eklendi
+
+- **Jupyter Notebook desteği** (`notebooks.py`): kod hücreleri sırasıyla tek bir sanal betiğe dizilip bütün analizlerden geçer; hücreler arası veri sızıntısı ve veri akışı yakalanır, notebook'lara yazılmış anahtarlar taranır, bulgular "hücre N, satır M" olarak gösterilir. IPython komutları satır kaydırmadan nötrlenir; başka dile geçen ve ayrıştırılamayan hücreler atlanıp raporlanır. Yeni `churn-notebook` örnek projesi.
+- **Pull request özeti** (`pr_report.py`): `--baseline` ile iki sürüm karşılaştırılır; `--format pr` skor farkını, kategori puanlarını, yeni ve giderilen bulguları kısa bir Markdown'da verir. `--max-drop` skor düşüşü için kalite kapısıdır. GitHub Actions içinde skor ve fark adım çıktısına yazılır.
+- **GitHub Action** (`action.yml`): pull request'lerde temel dalla karşılaştırıp tek bir yorumu günceller, raporu iş özetine ekler, `min-score` / `max-drop` kapılarını uygular. Bu depo kendi PR'larında kullanır.
+
 ### Düzeltildi
 
 - Yapay zekâ ayarları: Ollama'yı başlattıktan ya da model indirdikten sonra liste 5 dakika boyunca güncellenmiyordu; Ollama artık her seferinde canlı sorgulanır ve "Yeniden dene" düğmesi var.
 - Sağlayıcı adları dar kenar çubuğunda kesiliyordu; adlar kısaltıldı, açıklamalar altta gösteriliyor. Açma anahtarıyla aynı işi yapan "Kapalı" seçeneği kaldırıldı.
 - "`ollama pull` ile model indirin" uyarısı artık yalnızca model yoksa ya da seçili model küçükse gösteriliyor. Anahtar alanı ham ortam değişkeni adı yerine "API anahtarı" olarak görünüyor; hatalı anahtarda uyarı veriliyor.
+- Notebook projelerine "main.py / app.py giriş noktası yok" önerisi artık verilmiyor; notebook kendi giriş noktasıdır.
 - Örnek projelerde analiz ilerlemesi dar düğme sütunu yerine satırın altında tam genişlikte gösteriliyor; yapay zekâ adımının token sayacı artık görünüyor.
 
 ## [1.2.0] - 2026-10-16
