@@ -9,6 +9,7 @@ from repomentor.analyzer.rules import SHORT_LABELS
 from repomentor.models.analysis_result import AnalysisResult, UnusedSymbol
 from repomentor.ui.components import safe_md
 from repomentor.ui.session import report_key
+from repomentor.utils.text_utils import share_percent
 
 KIND_NAMES = {"function": "fonksiyon", "method": "metot", "class": "sınıf"}
 PATCH_NAME = "repomentor-fixes.patch"
@@ -67,7 +68,7 @@ def render_test_reach(r: AnalysisResult) -> None:
     if usage.test_reach is None:
         return
     st.markdown("##### Testlerin ulaştığı kod (statik)")
-    st.progress(usage.test_reach, text=f"%{usage.test_reach * 100:.0f} · {usage.test_reached}/{usage.test_total} fonksiyona "
+    st.progress(usage.test_reach, text=f"%{share_percent(usage.test_reach)} · {usage.test_reached}/{usage.test_total} fonksiyona "
                                        "testlerden bir çağrı zinciriyle ulaşılıyor")
     st.caption("Testler çalıştırılmadan çağrı grafiğinden hesaplanır. Satır kapsamı (coverage.py) değildir; "
                "hiçbir testin çağırmadığı fonksiyonları gösterir.")

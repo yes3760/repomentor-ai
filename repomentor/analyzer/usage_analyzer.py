@@ -9,6 +9,7 @@ from repomentor.analyzer.file_tree import ProjectFiles
 from repomentor.analyzer.rules import make_issue
 from repomentor.models.analysis_result import UnusedSymbol, UsageReport
 from repomentor.models.issue import Issue, Location
+from repomentor.utils.text_utils import share_percent
 
 MAX_LISTED = 40
 
@@ -99,7 +100,7 @@ def usage_issues(report: UsageReport, has_tests: bool) -> list[Issue]:
     if has_tests and report.untested and report.test_reach is not None:
         issues.append(make_issue(
             "TST005", [Location(u.file, u.line) for u in report.untested][:15],
-            {"count": len(report.untested), "percent": f"{report.test_reach * 100:.0f}", "names": _names(report.untested)},
+            {"count": len(report.untested), "percent": share_percent(report.test_reach), "names": _names(report.untested)},
             source="ast", confidence="medium", count=len(report.untested),
             effort_minutes=min(20 * len(report.untested), 480),
         ))

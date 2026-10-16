@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 
 SECRET_ASSIGNMENT = re.compile(
@@ -87,6 +88,16 @@ def tr_number(value: float | int | None, digits: int = 1) -> str:
         return f"{int(value):,}".replace(",", ".")
     text = f"{value:,.{digits}f}"
     return text.replace(",", "§").replace(".", ",").replace("§", ".")
+
+
+def share_percent(ratio: float) -> str:
+    """A share as a percentage that never rounds a gap away: 0.997 → "99,7", not "100"; 0.003 → "0,3", not "0"."""
+    value = ratio * 100
+    if 99 < value < 100:
+        return tr_number(math.floor(value * 10) / 10, 1)
+    if 0 < value < 1:
+        return tr_number(math.ceil(value * 10) / 10, 1)
+    return f"{value:.0f}"
 
 
 def truncate(text: str, limit: int) -> str:

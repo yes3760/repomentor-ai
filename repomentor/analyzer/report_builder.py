@@ -14,7 +14,7 @@ from repomentor.analyzer.taint import KIND_LABELS, describe
 from repomentor.models.analysis_result import AIInsights, AnalysisResult
 from repomentor.models.issue import SEVERITY_LABELS, Issue, format_effort
 from repomentor.utils.constants import APP_NAME, CATEGORY_LABELS
-from repomentor.utils.text_utils import mask_secrets, tr_number
+from repomentor.utils.text_utils import mask_secrets, share_percent, tr_number
 
 DISCLAIMER = (
     "Bu skor, RepoMentor AI'ın statik kontrolleri ve temel proje kriterlerine göre hesaplanmıştır. "
@@ -165,7 +165,7 @@ def _data_science_lines(result: AnalysisResult) -> list[str]:
 
 
 def _percent(value: float | None) -> str:
-    return "-" if value is None else f"%{value * 100:.0f}"
+    return "-" if value is None else f"%{share_percent(value)}"
 
 
 def _flow_lines(result: AnalysisResult) -> list[str]:

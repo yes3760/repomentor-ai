@@ -16,7 +16,7 @@ Aşağıdaki metinler projede **gerçekten bulunan** özelliklere dayanır. Kend
 - Jupyter Notebook kod hücrelerini tek bir sanal betiğe dizip bütün analizlerden geçiren ve bulguları hücre numarasına geri çeviren bir katman yazdım; hücreler arasındaki veri sızıntılarını yakalıyor.
 - Pull request'lerde temel dalla karşılaştırıp skor farkını ve yeni bulguları yorum olarak yazan bir GitHub Action geliştirdim; skor düşüşünü kalite kapısı olarak kullanıyor.
 - README'deki kurulum komutlarını çalıştırmadan projeye karşı doğrulayan bir denetleyici, Shannon entropisiyle adı geçmeyen API anahtarlarını bulan bir tarayıcı ve güvenli düzeltmeleri `git apply` ile uygulanabilir bir yama olarak üreten bir otomatik düzeltme modülü yazdım.
-- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 283 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
+- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 289 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
 
 ## LinkedIn – proje açıklaması (kısa)
 

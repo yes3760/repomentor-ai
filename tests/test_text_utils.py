@@ -1,4 +1,6 @@
-from repomentor.utils.text_utils import decode_bytes, is_placeholder, mask_secrets, tr_number
+import pytest
+
+from repomentor.utils.text_utils import decode_bytes, is_placeholder, mask_secrets, share_percent, tr_number
 
 # Token-shaped strings are assembled at runtime so this file never contains a
 # literal that looks like a real credential.
@@ -38,3 +40,8 @@ def test_turkish_numbers():
     assert tr_number(3.456, 2) == "3,46"
     assert tr_number(12345) == "12.345"
     assert tr_number(None) == "-"
+
+
+@pytest.mark.parametrize(("ratio", "text"), [(0, "0"), (0.003, "0,3"), (0.5833, "58"), (0.997, "99,7"), (0.9999, "99,9"), (1.0, "100")])
+def test_share_percent_never_rounds_a_gap_away(ratio, text):
+    assert share_percent(ratio) == text

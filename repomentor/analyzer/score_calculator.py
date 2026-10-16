@@ -19,6 +19,7 @@ from repomentor.models.analysis_result import (
 )
 from repomentor.models.issue import Issue
 from repomentor.utils.constants import CATEGORY_LABELS, LONG_FILE_LINES, SCORE_BANDS, SCORE_WEIGHTS
+from repomentor.utils.text_utils import share_percent
 
 
 class _Card:
@@ -126,7 +127,7 @@ def _reach_factor(card: _Card, t: TestReport, reach: float | None) -> None:
         elif t.ratio >= 0.2:
             card.add(f"Test / fonksiyon oranı orta ({t.ratio:.2f})", 8)
         return
-    label = f"Testler fonksiyonların %{reach * 100:.0f}'ine ulaşıyor (statik)"
+    label = f"Testler fonksiyonların %{share_percent(reach)}'ine ulaşıyor (statik)"
     if reach >= 0.7:
         card.add(label, 15)
     elif reach >= 0.4:

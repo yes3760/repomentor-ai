@@ -44,7 +44,7 @@ from repomentor.ui.engine_views import (
 )
 from repomentor.ui.insight_views import render_clones, render_debt_and_hotspots, render_import_graph, render_taint_flows
 from repomentor.ui.session import new_analysis, report_key, save_step
-from repomentor.utils.text_utils import tr_number
+from repomentor.utils.text_utils import share_percent, tr_number
 
 
 def _ai_ok(r: AnalysisResult) -> bool:
@@ -319,7 +319,7 @@ def render_tests(r: AnalysisResult) -> None:
         ("Test dosyası", len(t.test_files), ", ".join(t.frameworks) or "test aracı yok"),
         ("Test fonksiyonu", t.test_functions, f"{t.source_functions} public fonksiyona karşı"),
         ("Test / fonksiyon", tr_number(round(t.ratio, 2), 2), "0,3 ve üzeri iyi bir başlangıç"),
-        ("Statik erişim", "-" if r.usage.test_reach is None else f"%{r.usage.test_reach * 100:.0f}", "testlerin ulaştığı fonksiyonlar"),
+        ("Statik erişim", "-" if r.usage.test_reach is None else f"%{share_percent(r.usage.test_reach)}", "testlerin ulaştığı fonksiyonlar"),
     ])
     checklist([
         ("Testler CI'da (ör. GitHub Actions) otomatik çalışıyor", t.ci_runs_tests),

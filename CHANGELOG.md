@@ -16,6 +16,7 @@ Bu projedeki önemli değişiklikler burada tutulur. Biçim [Keep a Changelog](h
 - Yapay zekâ ayarları: Ollama'yı başlattıktan ya da model indirdikten sonra liste 5 dakika boyunca güncellenmiyordu; Ollama artık her seferinde canlı sorgulanır ve "Yeniden dene" düğmesi var.
 - Sağlayıcı adları dar kenar çubuğunda kesiliyordu; adlar kısaltıldı, açıklamalar altta gösteriliyor. Açma anahtarıyla aynı işi yapan "Kapalı" seçeneği kaldırıldı.
 - "`ollama pull` ile model indirin" uyarısı artık yalnızca model yoksa ya da seçili model küçükse gösteriliyor. Anahtar alanı ham ortam değişkeni adı yerine "API anahtarı" olarak görünüyor; hatalı anahtarda uyarı veriliyor.
+- Yüzdeler eksik bir şey kaldığında %100'e (ya da %0'a) yuvarlanıyordu (ör. "2 fonksiyona test ulaşmıyor, statik kapsam %100"); artık "%99,7" gibi gösteriliyor.
 - Notebook projelerine "main.py / app.py giriş noktası yok" önerisi artık verilmiyor; notebook kendi giriş noktasıdır.
 - Örnek projelerde analiz ilerlemesi dar düğme sütunu yerine satırın altında tam genişlikte gösteriliyor; yapay zekâ adımının token sayacı artık görünüyor.
 
