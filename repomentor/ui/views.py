@@ -44,6 +44,7 @@ from repomentor.ui.engine_views import (
 )
 from repomentor.ui.insight_views import render_clones, render_debt_and_hotspots, render_import_graph, render_taint_flows
 from repomentor.ui.session import new_analysis, report_key, save_step
+from repomentor.ui.visual_views import render_badge, render_code_map, render_flow_paths
 from repomentor.utils.text_utils import share_percent, tr_number
 
 
@@ -157,6 +158,7 @@ def render_overview(r: AnalysisResult) -> None:
     _why_score(r)
     _overview_tiles(r)
     render_debt_and_hotspots(r)
+    render_code_map(r)
     findings, context = st.columns([1.65, 1], gap="large")
     with findings:
         st.markdown("#### Öncelikli bulgular")
@@ -299,6 +301,7 @@ def render_security(r: AnalysisResult) -> None:
         ("Kullanıcı girdisi tehlikeli bir çağrıya ulaşmıyor (veri akışı)", not s.taint_flows),
     ])
     render_taint_flows(r)
+    render_flow_paths(r)
     _dependency_section(r)
     if s.env_committed:
         st.warning("Depoda takip edilen ortam dosyaları: " + ", ".join(f"`{p}`" for p in s.env_committed))
@@ -502,6 +505,7 @@ def render_career(r: AnalysisResult) -> None:
     st.markdown("##### LinkedIn – gönderi")
     st.code(c.linkedin_post, language=None, wrap_lines=True)
     st.caption("Kod kutularının sağ üstündeki simgeyle tek tıkla kopyalayabilirsiniz.")
+    render_badge(r)
 
 
 # --- Downloads ------------------------------------------------------------------------------

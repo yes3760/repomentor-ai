@@ -16,7 +16,7 @@ Aşağıdaki metinler projede **gerçekten bulunan** özelliklere dayanır. Kend
 - Jupyter Notebook kod hücrelerini tek bir sanal betiğe dizip bütün analizlerden geçiren ve bulguları hücre numarasına geri çeviren bir katman yazdım; hücreler arasındaki veri sızıntılarını yakalıyor.
 - Pull request'lerde temel dalla karşılaştırıp skor farkını ve yeni bulguları yorum olarak yazan bir GitHub Action geliştirdim; skor düşüşünü kalite kapısı olarak kullanıyor.
 - README'deki kurulum komutlarını çalıştırmadan projeye karşı doğrulayan bir denetleyici, Shannon entropisiyle adı geçmeyen API anahtarlarını bulan bir tarayıcı ve güvenli düzeltmeleri `git apply` ile uygulanabilir bir yama olarak üreten bir otomatik düzeltme modülü yazdım.
-- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 289 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
+- ZIP Slip ve zip-bomb koruması, gizli değer maskeleme ve kodu hiç çalıştırmadan analiz eden güvenli bir yükleme hattı geliştirdim; 304 otomatik testi GitHub Actions'ta çalıştırdım ve aracın kendi kodunu analiz ettiği bir kalite kapısı (≥80/100) kurdum.
 
 ## LinkedIn – proje açıklaması (kısa)
 
@@ -38,6 +38,8 @@ RepoMentor AI'a bir GitHub bağlantısı veya ZIP verdiğinizde:
 • README'deki kurulum komutlarının gerçekten çalışıp çalışmayacağını kontrol ediyor
 • Jupyter Notebook'ları hücre hücre inceliyor; hücreler arası veri sızıntısını yakalıyor
 • GitHub Action olarak her pull request'e "skor 82 → 79, 2 yeni bulgu" yorumu yazıyor
+• Projeyi tıklanabilir bir kod haritası olarak çiziyor; en riskli dosya kırmızı yanıyor
+• Güvenlik açıklarını, kullanıcı girdisinden tehlikeli çağrıya uzanan bir saldırı yolu diyagramıyla gösteriyor
 • Güvenli düzeltmeleri, kodunuza dokunmadan `git apply` ile uygulanacak bir yama olarak veriyor
 • Test ve README durumunu değerlendiriyor
 • 100 üzerinden, her puanını gerekçelendiren bir skor veriyor

@@ -47,6 +47,11 @@ def _percentile_ranks(values: dict[str, float]) -> dict[str, float]:
     return {key: position.get(value, 0.0) for key, value in values.items()}
 
 
+def base_path(location_file: str) -> str:
+    """Notebook findings point at `nb.ipynb › hücre 3`; files are keyed by the notebook itself."""
+    return location_file.split(" › ", 1)[0]
+
+
 def _file_findings(issues: list[Issue]) -> tuple[dict[str, float], dict[str, int], dict[str, int]]:
     weight: dict[str, float] = defaultdict(float)
     count: dict[str, int] = defaultdict(int)
@@ -54,7 +59,7 @@ def _file_findings(issues: list[Issue]) -> tuple[dict[str, float], dict[str, int
     for issue in issues:
         if issue.source == "ai":
             continue
-        for path in {loc.file for loc in issue.locations}:
+        for path in {base_path(loc.file) for loc in issue.locations}:
             weight[path] += SEVERITY_WEIGHT[issue.severity]
             count[path] += 1
             severe[path] += issue.severity in {"critical", "high"}
@@ -74,7 +79,8 @@ def _reasons(stats: dict, count: int, severe: int) -> list[str]:
     return reasons
 
 
-def hotspots(quality: QualityReport, issues: list[Issue]) -> list[Hotspot]:
+def file_risks(quality: QualityReport, issues: list[Issue]) -> dict[str, dict]:
+    """Every source file: its 0-100 risk, the percentile rank on each axis and the raw numbers."""
     files = quality.per_file
     weight, count, severe = _file_findings(issues)
     axes = {
@@ -82,13 +88,21 @@ def hotspots(quality: QualityReport, issues: list[Issue]) -> list[Hotspot]:
         "cognitive": _percentile_ranks({f: float(stats["cognitive"]) for f, stats in files.items()}),
         "lines": _percentile_ranks({f: float(stats["lines"]) for f, stats in files.items()}),
     }
-    ranked = []
-    for path, stats in files.items():
-        if not weight.get(path) and stats["cognitive"] < 15:
-            continue  # nothing to fix here; size alone is not a reason to look first
-        risk = round(100 * sum(AXIS_WEIGHTS[axis] * axes[axis][path] for axis in AXIS_WEIGHTS))
-        ranked.append(Hotspot(
-            file=path, risk=risk, cognitive=stats["cognitive"], issues=count.get(path, 0),
-            severe=severe.get(path, 0), lines=stats["lines"], reasons=_reasons(stats, count.get(path, 0), severe.get(path, 0)),
-        ))
+    return {
+        path: {
+            **stats, "weight": weight.get(path, 0.0), "count": count.get(path, 0), "severe": severe.get(path, 0),
+            "ranks": {axis: axes[axis][path] for axis in AXIS_WEIGHTS},
+            "risk": round(100 * sum(AXIS_WEIGHTS[axis] * axes[axis][path] for axis in AXIS_WEIGHTS)),
+        }
+        for path, stats in files.items()
+    }
+
+
+def hotspots(quality: QualityReport, issues: list[Issue]) -> list[Hotspot]:
+    ranked = [
+        Hotspot(file=path, risk=row["risk"], cognitive=row["cognitive"], issues=row["count"], severe=row["severe"],
+                lines=row["lines"], reasons=_reasons(row, row["count"], row["severe"]))
+        for path, row in file_risks(quality, issues).items()
+        if row["weight"] or row["cognitive"] >= 15     # size alone is not a reason to look first
+    ]
     return sorted(ranked, key=lambda h: (-h.risk, -h.severe, h.file))[:MAX_HOTSPOTS]

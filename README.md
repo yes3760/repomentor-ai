@@ -10,6 +10,7 @@ Statik analiz (AST, Radon, Bandit, Ruff) ölçer; ücretsiz bir LLM (Ollama, Gro
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.66%2B-FF4B4B?logo=streamlit&logoColor=white)
 [![CI](https://github.com/yes3760/repomentor-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/yes3760/repomentor-ai/actions/workflows/ci.yml)
+[![RepoMentor AI: 96/100](https://img.shields.io/badge/RepoMentor_AI-96%2F100-brightgreen)](#skor-nasıl-hesaplanır)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Cost](https://img.shields.io/badge/maliyet-0%20%E2%82%BA-brightgreen)
 
@@ -44,6 +45,9 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
 - **Otomatik düzeltme yaması:** `yaml.load` → `yaml.safe_load`, çıplak `except`, eksik `.gitignore` / `.env.example` ve Ruff'ın güvenli düzeltmeleri; proje dosyalarına dokunulmadan `git apply` ile uygulanacak bir yama olarak
 - **Jupyter Notebook desteği:** kod hücreleri sırasıyla tek bir betik gibi analiz edilir; hücreler arası veri sızıntısı, veri akışı ve notebook'lara yazılmış anahtarlar yakalanır, bulgular "hücre 7, satır 4" olarak gösterilir. `%matplotlib`, `!pip` gibi IPython komutları analizi bozmaz
 - **GitHub Action ve PR yorumu:** her pull request'te temel dala göre skor farkı, yeni ve giderilen bulgular tek bir yorumda; en düşük skor ve en fazla düşüş kalite kapısı olarak kullanılabilir
+- **Etkileşimli kod haritası:** proje klasör → dosya hiyerarşisinde tıklanıp içine girilebilen bir harita; alan satır sayısını, renk riski, bilişsel yükü ya da bulguları gösterir, ipucunda dosyanın ilk bulguları yazar
+- **Saldırı yolu diyagramı:** her doğrulanmış veri akışı, kullanıcı girdisinden değişkenler ve fonksiyonlar üzerinden tehlikeli çağrıya uzanan bir grafik olarak çizilir
+- **README rozeti:** "RepoMentor AI 96/100" rozeti tek satırla kendi README'nize; SVG olarak da indirilebilir
 - **Mimari:** modül bağımlılık grafiği, **döngüsel import** tespiti ve modül bağlılık ölçütleri (Ca, Ce, kararsızlık)
 - **Teknik borç ve öncelik:** SQALE yöntemiyle A–E bakım notu ve "önce bu dosyalara bakın" risk sıralaması
 - **Güvenlik:** gizli anahtar taraması (maskelenmiş; adı geçmeyen rastgele anahtarlar için **Shannon entropisi**), depoya girmiş `.env`, `.gitignore` kontrolü, AST kuralları (`eval`, `shell=True`, string ile kurulmuş SQL, `pickle`, `yaml.load`, `verify=False`, debug modu), Bandit
@@ -65,6 +69,12 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
 ## Ekran görüntüleri
 
 <table>
+  <tr>
+    <td width="50%"><img src="docs/code-map.jpg" alt="RepoMentor'un kendi deposunun riske göre renklendirilmiş etkileşimli kod haritası"><br>
+      <sub><b>Kod haritası:</b> RepoMentor'un kendi deposu; alan satır sayısı, renk risk. Klasöre tıklayınca içine girer</sub></td>
+    <td width="50%"><img src="docs/attack-path.jpg" alt="Kullanıcı girdisinden eval çağrısına uzanan saldırı yolu diyagramı"><br>
+      <sub><b>Saldırı yolu:</b> <code>request.args</code> → değişken → <code>eval()</code>; her doğrulanmış akış için çizilir</sub></td>
+  </tr>
   <tr>
     <td width="50%"><img src="docs/security-flows.jpg" alt="Veri akışı analizi tablosu ve OSV.dev bağımlılık açıkları"><br>
       <sub><b>Güvenlik:</b> kullanıcı girdisinin <code>eval</code>, SQL ve kabuk komutuna kaynaktan hedefe ulaştığı yollar; paket açıkları ve güvenli sürümler</sub></td>
@@ -480,6 +490,8 @@ repomentor-ai/
 │   │   ├── autofix.py             # güvenli düzeltmeler, unified diff yaması
 │   │   ├── notebooks.py           # notebook kod hücreleri → sanal betik, bulguları hücrelere geri çevirme
 │   │   ├── pr_report.py           # pull request özeti: skor farkı, yeni / giderilen bulgular
+│   │   ├── code_map.py            # etkileşimli kod haritası (ECharts treemap)
+│   │   ├── badge.py               # README rozeti (shields.io bağlantısı ve SVG)
 │   │   ├── code_metrics.py        # bilişsel karmaşıklık, yapısal kopya, tip ipucu kapsamı
 │   │   ├── import_graph.py        # modül grafiği, Tarjan ile döngü tespiti, bağlılık ölçütleri
 │   │   ├── insights.py            # teknik borç (SQALE) ve riskli dosya sıralaması
@@ -509,7 +521,7 @@ pytest
 ruff check .
 ```
 
-Test paketi (289 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
+Test paketi (304 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
 
 ## Ücretsiz yayınlama
 

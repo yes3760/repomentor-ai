@@ -109,3 +109,15 @@ def test_notebook_demo_runs():
     assert not at.exception
     section(at, "Teknik analiz")
     assert "##### Veri bilimi kontrolleri" in [m.value for m in at.markdown]
+
+
+def test_visual_sections():
+    at = workspace()
+    at.button(key="demo-problematic_project-run").click().run()
+    assert "##### Kod haritası" in [m.value for m in at.markdown]
+    section(at, "Teknik analiz")
+    assert "##### Saldırı yolu" in [m.value for m in at.markdown]
+    section(at, "Portföy")
+    assert "##### README rozeti" in [m.value for m in at.markdown]
+    assert any("img.shields.io/badge/RepoMentor_AI-" in c.value for c in at.code)
+    assert not at.exception
