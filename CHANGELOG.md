@@ -8,6 +8,7 @@ Bu projedeki önemli değişiklikler burada tutulur. Biçim [Keep a Changelog](h
 
 - **Jupyter Notebook desteği** (`notebooks.py`): kod hücreleri sırasıyla tek bir sanal betiğe dizilip bütün analizlerden geçer; hücreler arası veri sızıntısı ve veri akışı yakalanır, notebook'lara yazılmış anahtarlar taranır, bulgular "hücre N, satır M" olarak gösterilir. IPython komutları satır kaydırmadan nötrlenir; başka dile geçen ve ayrıştırılamayan hücreler atlanıp raporlanır. Yeni `churn-notebook` örnek projesi.
 - **Pull request özeti** (`pr_report.py`): `--baseline` ile iki sürüm karşılaştırılır; `--format pr` skor farkını, kategori puanlarını, yeni ve giderilen bulguları kısa bir Markdown'da verir. `--max-drop` skor düşüşü için kalite kapısıdır. GitHub Actions içinde skor ve fark adım çıktısına yazılır.
+- Pull request şablonu (`.github/pull_request_template.md`): test adımları ve kontrol listesi.
 - **GitHub Action** (`action.yml`): pull request'lerde temel dalla karşılaştırıp tek bir yorumu günceller, raporu iş özetine ekler, `min-score` / `max-drop` kapılarını uygular. Bu depo kendi PR'larında kullanır.
 
 ### Düzeltildi
