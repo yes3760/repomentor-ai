@@ -1,6 +1,9 @@
 # 🧭 RepoMentor AI
 
-<img src="assets/repomentor-logo.png" alt="RepoMentor logosu" width="520">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/repomentor-logo.png">
+  <img src="assets/repomentor-logo-light.png" alt="RepoMentor logosu" width="520">
+</picture>
 
 **Python projelerini analiz eden, sorunları önceliklendiren ve geliştiriciye uygulanabilir bir yol haritası çıkaran açık kaynak araç.**
 Statik analiz (AST, Radon, Bandit, Ruff) ölçer; ücretsiz bir LLM (Ollama, Groq, Gemini) yorumlar. **Tamamen ücretsiz** çalışır.

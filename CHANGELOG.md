@@ -12,6 +12,7 @@ Bu projedeki önemli değişiklikler burada tutulur. Biçim [Keep a Changelog](h
 - **Etkileşimli kod haritası** (`code_map.py`): klasör → dosya treemap'i; alan satır sayısı, renk risk / bilişsel yük / bulgular. Dosya başına risk artık bütün dosyalar için hesaplanıyor (`file_risks`); "önce bu dosyalara bakın" listesi de aynı hesabı kullanıyor.
 - **Saldırı yolu diyagramı**: her doğrulanmış veri akışı kaynak → değişkenler → tehlikeli çağrı grafiği olarak çiziliyor.
 - **README rozeti** (`badge.py`): shields.io bağlantısı ve indirilebilir SVG; Portföy sekmesinde.
+- Şeffaf arka planlı yeni logolar: koyu zeminler için açık yazılı (`assets/repomentor-logo.png`), açık zeminler için koyu yazılı (`assets/repomentor-logo-light.png`); README GitHub temasına göre doğru olanı gösterir.
 - **Doğrulanmış güvenlik düzeltmeleri** (`security_fixes.py`): doğrulanmış SQL enjeksiyonu akışları parametreli sorguya (`?` / `%s`, sürücüye göre), komut enjeksiyonu akışları kabuksuz argüman listesine (`subprocess.run([...])`) çevrilip düzeltme yamasına eklenir. Her düzeltme uygulandıktan sonra veri akışı analizi yeniden çalıştırılır; akış kapanmıyorsa düzeltme atılır. Güvenlik sekmesinde saldırı yolunun altında, PR yorumunda 🔧 işaretiyle gösterilir.
 - **GitHub Action** (`action.yml`): pull request'lerde temel dalla karşılaştırıp tek bir yorumu günceller, raporu iş özetine ekler, `min-score` / `max-drop` kapılarını uygular. Bu depo kendi PR'larında kullanır.
 

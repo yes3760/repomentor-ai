@@ -193,8 +193,8 @@ button[kind^="primary"] p, button[kind^="primary"] span {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 48%;
-  transform: scale(1.38);
+  object-position: center 50%;
+  transform: scale(1.15);   /* the transparent logo's mark and wordmark span ~73 % of its width */
 }
 .rm-mobile-brand { display: none; }
 .rm-sidebar-label {
