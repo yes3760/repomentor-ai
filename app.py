@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from repomentor.analyzer.pipeline import analyze_project
 from repomentor.analyzer.repository_loader import LoaderError, load_github, load_local, load_zip
-from repomentor.ui.branding import LOGO_PATH, logo_html
+from repomentor.ui.branding import ICON_PATH, logo_html
 from repomentor.ui.components import esc
 from repomentor.ui.session import remember_result
 from repomentor.ui.sidebar import render_sidebar
@@ -27,7 +27,7 @@ EXAMPLES = {
     "notebook_project": ("churn-notebook", "Jupyter · pandas · scikit-learn", "Hücreler arasında veri sızıntısı olan keşif notebook'u.", "Notebook", "warning"),
 }
 
-st.set_page_config(page_title=APP_NAME, page_icon=str(LOGO_PATH), layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=APP_NAME, page_icon=str(ICON_PATH), layout="wide", initial_sidebar_state="expanded")
 st.html(css())
 
 

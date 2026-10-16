@@ -182,19 +182,35 @@ button[kind^="primary"] p, button[kind^="primary"] span {
   max-width: 224px;
   aspect-ratio: 3.9;
   overflow: hidden;
-  background: #120e17;
-  border: 1px solid rgba(229, 184, 75, 0.28);
-  border-radius: 10px;
   margin: 2px 0 22px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
 }
-.rm-brand-logo {
+.rm-logo { position: relative; width: 100%; height: 100%; }
+.rm-logo-img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 50%;
-  transform: scale(1.15);   /* the transparent logo's mark and wordmark span ~73 % of its width */
+  transform: scale(1.15);   /* the logo canvas has wide transparent margins */
+}
+/* Show the logo made for the background. Streamlit sets color-scheme on .stApp, and light-dark()
+   inside a mask gradient switches each image fully on or off, live on a theme change. */
+.rm-logo-on-light {
+  -webkit-mask-image: linear-gradient(light-dark(#000, transparent), light-dark(#000, transparent));
+  mask-image: linear-gradient(light-dark(#000, transparent), light-dark(#000, transparent));
+}
+.rm-logo-on-dark {
+  -webkit-mask-image: linear-gradient(light-dark(transparent, #000), light-dark(transparent, #000));
+  mask-image: linear-gradient(light-dark(transparent, #000), light-dark(transparent, #000));
+}
+@supports not (color: light-dark(#000, #fff)) {   /* older browsers: follow the operating system instead */
+  .rm-logo-on-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .rm-logo-on-dark { display: block; }
+    .rm-logo-on-light { display: none; }
+  }
 }
 .rm-mobile-brand { display: none; }
 .rm-sidebar-label {
@@ -1299,9 +1315,6 @@ button[kind^="primary"] p, button[kind^="primary"] span {
     display: block;
     width: 164px;
     aspect-ratio: 3.9;
-    background: #120e17;
-    border: 1px solid rgba(229, 184, 75, 0.25);
-    border-radius: 8px;
     overflow: hidden;
     margin: 0 0 20px;
   }

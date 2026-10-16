@@ -18,6 +18,7 @@ Bu projedeki önemli değişiklikler burada tutulur. Biçim [Keep a Changelog](h
 
 ### Düzeltildi
 
+- Kenar çubuğundaki logo her temada koyu bir kutunun içindeydi; artık kutu yok ve zemine uyan logo gösteriliyor: açık temada koyu yazılı, koyu temada krem yazılı. Tema değiştirildiğinde logo da anında değişir. Tarayıcı sekmesinde yalnızca R işareti (`assets/repomentor-icon.png`) kullanılıyor.
 - Yapay zekâ ayarları: Ollama'yı başlattıktan ya da model indirdikten sonra liste 5 dakika boyunca güncellenmiyordu; Ollama artık her seferinde canlı sorgulanır ve "Yeniden dene" düğmesi var.
 - Sağlayıcı adları dar kenar çubuğunda kesiliyordu; adlar kısaltıldı, açıklamalar altta gösteriliyor. Açma anahtarıyla aynı işi yapan "Kapalı" seçeneği kaldırıldı.
 - "`ollama pull` ile model indirin" uyarısı artık yalnızca model yoksa ya da seçili model küçükse gösteriliyor. Anahtar alanı ham ortam değişkeni adı yerine "API anahtarı" olarak görünüyor; hatalı anahtarda uyarı veriliyor.
