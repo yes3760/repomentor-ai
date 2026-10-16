@@ -1,0 +1,19 @@
+[server]
+maxUploadSize = 50
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+# Separate light and dark themes keep the user's / OS choice working.
+[theme.light]
+primaryColor = "#b88428"
+backgroundColor = "#f8f7f4"
+secondaryBackgroundColor = "#efede8"
+textColor = "#1c1d21"
+
+[theme.dark]
+primaryColor = "#dca946"
+backgroundColor = "#0d0e12"
+secondaryBackgroundColor = "#14161c"
+textColor = "#ecebe8"

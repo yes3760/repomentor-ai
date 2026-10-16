@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local tooling (AI assistant settings; .agents/ only links into .venv)
+.claude/
+.agents/
+
+# The intentionally broken demo project ships its .env on purpose (fake values).
+!examples/problematic_project/.env
