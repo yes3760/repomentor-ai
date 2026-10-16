@@ -42,7 +42,8 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
 - **Kontrol akışı:** fonksiyon başına kontrol akış grafiğiyle **erişilemeyen kod** ve erken `return` ya da `except` yolunda **kapatılmayan dosya / veritabanı bağlantıları**
 - **Veri bilimi kontrolleri:** train/test ayrımından önce `fit` edilen ölçekleyiciler ve test verisine `fit` gibi **veri sızıntıları**; `iterrows`, `apply(axis=1)`, zincirli indeksle atama, `DataFrame.append` gibi yavaş/hatalı pandas kalıpları
 - **README komut doğrulayıcı:** README'deki `python main.py`, `uvicorn app.main:app`, `pip install -r …`, `make test` gibi komutların projede gerçekten çalışıp çalışmayacağı (`cd` adımları izlenerek, hiçbir komut çalıştırılmadan)
-- **Otomatik düzeltme yaması:** `yaml.load` → `yaml.safe_load`, çıplak `except`, eksik `.gitignore` / `.env.example` ve Ruff'ın güvenli düzeltmeleri; proje dosyalarına dokunulmadan `git apply` ile uygulanacak bir yama olarak
+- **Doğrulanmış güvenlik düzeltmeleri:** bulunan SQL enjeksiyonu parametreli sorguya, komut enjeksiyonu kabuksuz argüman listesine çevrilir; düzeltilmiş kod veri akışı analizinden yeniden geçirilir ve açık gerçekten kapanmıyorsa düzeltme önerilmez
+- **Otomatik düzeltme yaması:** güvenlik düzeltmeleri, `yaml.load` → `yaml.safe_load`, çıplak `except`, eksik `.gitignore` / `.env.example` ve Ruff'ın güvenli düzeltmeleri; proje dosyalarına dokunulmadan `git apply` ile uygulanacak bir yama olarak
 - **Jupyter Notebook desteği:** kod hücreleri sırasıyla tek bir betik gibi analiz edilir; hücreler arası veri sızıntısı, veri akışı ve notebook'lara yazılmış anahtarlar yakalanır, bulgular "hücre 7, satır 4" olarak gösterilir. `%matplotlib`, `!pip` gibi IPython komutları analizi bozmaz
 - **GitHub Action ve PR yorumu:** her pull request'te temel dala göre skor farkı, yeni ve giderilen bulgular tek bir yorumda; en düşük skor ve en fazla düşüş kalite kapısı olarak kullanılabilir
 - **Etkileşimli kod haritası:** proje klasör → dosya hiyerarşisinde tıklanıp içine girilebilen bir harita; alan satır sayısını, renk riski, bilişsel yükü ya da bulguları gösterir, ipucunda dosyanın ilk bulguları yazar
@@ -73,7 +74,7 @@ RepoMentor AI bu sorulara tek ekranda cevap verir.
     <td width="50%"><img src="docs/code-map.jpg" alt="RepoMentor'un kendi deposunun riske göre renklendirilmiş etkileşimli kod haritası"><br>
       <sub><b>Kod haritası:</b> RepoMentor'un kendi deposu; alan satır sayısı, renk risk. Klasöre tıklayınca içine girer</sub></td>
     <td width="50%"><img src="docs/attack-path.jpg" alt="Kullanıcı girdisinden eval çağrısına uzanan saldırı yolu diyagramı"><br>
-      <sub><b>Saldırı yolu:</b> <code>request.args</code> → değişken → <code>eval()</code>; her doğrulanmış akış için çizilir</sub></td>
+      <sub><b>Saldırı yolu ve düzeltmesi:</b> <code>request.args</code> → <code>ad</code> → <code>cur.execute()</code>; altında yeniden analizle doğrulanmış parametreli sorgu</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/security-flows.jpg" alt="Veri akışı analizi tablosu ve OSV.dev bağımlılık açıkları"><br>
@@ -280,6 +281,16 @@ Yalnızca çalışan bir programı bozamayacak düzeltmeler yapılır:
 - `.gitignore` oluşturma veya `.env` ekleme
 - kodun okuduğu ortam değişkenlerinden boş değerli `.env.example`
 - Ruff'ın **güvenli** düzeltmeleri: kullanılmayan import (`__init__.py` ve testler hariç), yer tutucusuz f-string, sabitle `is`, gereksiz `;`
+- **Enjeksiyon düzeltmeleri** (`security_fixes.py`), yalnızca doğrulanmış veri akışları için:
+
+  ```text
+  cur.execute(f"... WHERE ad = '{ad}'")        →  cur.execute("... WHERE ad = ?", (ad,))
+  cur.execute(f"... LIKE '%{q}%'")             →  cur.execute("... LIKE ?", (f"%{q}%",))
+  os.system("cp okul.db yedek/" + isim)        →  subprocess.run(["cp", "okul.db", f"yedek/{isim}"])
+  subprocess.run("tar czf b.tgz " + d, shell=True)  →  subprocess.run(["tar", "czf", "b.tgz", d])
+  ```
+
+  Yer tutucu, projenin içe aktardığı sürücüye göre seçilir: sqlite3 için `?`, psycopg / PyMySQL / MySQL Connector için `%s` (sabit metindeki `%` o zaman `%%` olur). SQL'deki `''` kaçışı ve tırnaksız sayısal değerler doğru işlenir; `os.system` dönüşü kullanılıyorsa `.returncode` eklenir, gerekiyorsa `import subprocess` modül başına eklenir. Emin olunamayan hiçbir şeye dokunulmaz: bilinmeyen sürücü, çift tırnaklı tablo/sütun adı, `{x!r}` biçimlendirmesi, parametresi zaten olan çağrı, boru / yönlendirme / `$DEĞİŞKEN` gibi kabuk sözdizimi, başka bir dosyadaki yardımcı fonksiyonun içindeki hedef. Her düzeltme tek başına uygulanıp proje **veri akışı analizinden yeniden geçirilir**; o dosyadaki aynı türden akış sayısı azalmıyorsa düzeltme atılır. `eval()` için mekanik bir düzeltme yoktur (`ast.literal_eval` anlamı değiştirir), bu yüzden önerilmez.
 
 `== None` → `is None` gibi pandas nesnelerinde davranışı değiştirebilecek "unsafe" düzeltmeler bilinçli olarak yapılmaz. Dosyalar bayt olarak yeniden okunur, böylece CRLF satır sonları ve Türkçe karakterlerin sütunları korunur. Düzeltilen her Python dosyasının hâlâ ayrıştırılabildiği kontrol edilir. Çıktı, `git apply` / `patch -p1` ile uyumlu bir yamadır ve **proje dosyalarına hiçbir zaman yazılmaz**.
 
@@ -490,6 +501,7 @@ repomentor-ai/
 │   │   ├── autofix.py             # güvenli düzeltmeler, unified diff yaması
 │   │   ├── notebooks.py           # notebook kod hücreleri → sanal betik, bulguları hücrelere geri çevirme
 │   │   ├── pr_report.py           # pull request özeti: skor farkı, yeni / giderilen bulgular
+│   │   ├── security_fixes.py      # SQL / komut enjeksiyonu için doğrulanmış düzeltmeler
 │   │   ├── code_map.py            # etkileşimli kod haritası (ECharts treemap)
 │   │   ├── badge.py               # README rozeti (shields.io bağlantısı ve SVG)
 │   │   ├── code_metrics.py        # bilişsel karmaşıklık, yapısal kopya, tip ipucu kapsamı
@@ -521,7 +533,7 @@ pytest
 ruff check .
 ```
 
-Test paketi (304 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
+Test paketi (329 test, ağa hiç çıkmadan) şunları kapsar: dokuz taint hedefinin her biri, temizleyiciler ve yanlış alarm kalkanları, fonksiyonlar arası akış, SonarSource bilişsel karmaşıklık başvuru örnekleri, yapısal kopyalar, Tarjan ve döngüsel import senaryoları, SQALE not eşikleri, ZIP Slip ve zip-bomb korumaları, gizli değerlerin rapora ve prompt'a sızmaması, her güvenlik kuralının pozitif ve negatif örnekleri, skorların örnek projeleri doğru sıralaması, LLM yanıt ayrıştırıcısı ve sahte LLM ile uçtan uca akış; çağrı grafiğinin dinamik kullanım kalkanları, kontrol akışı (finally, suppress, match, fabrika fonksiyonları), koruma koşullu taint, veri sızıntısı ve doğru ML kodu örnekleri, README komutları, entropi eşikleri ve üretilen yamanın CRLF dosyalara `git apply` ile uygulanması. RepoMentor'un kendi kodunda kullanılmayan kod, erişilemeyen kod ve kaynak sızıntısı olmaması da test edilir. Ek olarak rapor karşılaştırması, satır kaymaları, arama/sıralama, CSV formül koruması ve Streamlit AppTest ile analiz → rapor → görev takibi → karşılaştırma → geçmiş temizliği doğrulanır.
 
 ## Ücretsiz yayınlama
 

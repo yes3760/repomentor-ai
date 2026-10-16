@@ -121,3 +121,15 @@ def test_visual_sections():
     assert "##### README rozeti" in [m.value for m in at.markdown]
     assert any("img.shields.io/badge/RepoMentor_AI-" in c.value for c in at.code)
     assert not at.exception
+
+
+def test_attack_path_shows_the_verified_fix():
+    at = workspace()
+    at.button(key="demo-problematic_project-run").click().run()
+    section(at, "Teknik analiz")
+    flows = at.session_state["history"][at.session_state["active_report"]].security.taint_flows
+    sql = next(i for i, f in enumerate(flows) if f.kind == "sql")
+    at.selectbox(key=f"flow-path-{at.session_state['active_report']}").set_value(sql).run()
+    assert any("doğrulanmış bir düzeltme" in s.value for s in at.success)
+    assert any('cur.execute("SELECT * FROM ogrenciler WHERE ad = ?", (ad,))' in c.value for c in at.code)
+    assert not at.exception

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
+
 import streamlit as st
 
 from repomentor.analyzer.badge import badge_markdown, badge_svg
 from repomentor.analyzer.code_map import COLOR_MODES, code_map_spec
 from repomentor.analyzer.taint import KIND_LABELS
-from repomentor.models.analysis_result import AnalysisResult, TaintFlow
+from repomentor.models.analysis_result import AnalysisResult, FileFix, TaintFlow
 from repomentor.ui.session import report_key
 
 
@@ -49,6 +51,42 @@ def flow_dot(flow: TaintFlow) -> str:
     ])
 
 
+HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+\d+(?:,\d+)? @@")
+
+
+def diff_hunk(diff: str, line: int) -> str:
+    """The file header and the one hunk of a unified diff that changes original line `line`."""
+    lines = diff.splitlines(keepends=True)
+    header = [entry for entry in lines[:2] if entry.startswith(("--- ", "+++ "))]
+    hunk: list[str] = []
+    for entry in lines[2:]:
+        if match := HUNK_HEADER.match(entry):
+            if hunk:
+                break
+            start, length = int(match.group(1)), int(match.group(2) or 1)
+            hunk = [entry] if start <= line < start + length else []
+        elif hunk:
+            hunk.append(entry)
+    return "".join(header + hunk) if hunk else ""
+
+
+def flow_fix(r: AnalysisResult, flow: TaintFlow) -> FileFix | None:
+    """The patch file holding a verified rewrite of this flow's sink, if there is one."""
+    prefix = f"satır {flow.line}: "
+    return next((fix for fix in r.fixes.files if fix.path == flow.file
+                 and any(change.startswith(prefix) and change.endswith("(doğrulandı)") for change in fix.changes)), None)
+
+
+def _render_flow_fix(r: AnalysisResult, flow: TaintFlow) -> None:
+    fix = flow_fix(r, flow)
+    if fix is None:
+        st.caption("Bu akış için otomatik düzeltme yok; çözüm önerisi bulgu kartında.")
+        return
+    st.success("Bu açık için doğrulanmış bir düzeltme hazır: kod düzeltildikten sonra veri akışı analizi yeniden çalıştırıldı ve akış kayboldu. "
+               "Yol haritasındaki düzeltme yamasında.", icon=":material/verified:")
+    st.code(diff_hunk(fix.diff, flow.line), language="diff")
+
+
 def render_flow_paths(r: AnalysisResult) -> None:
     flows = r.security.taint_flows
     if not flows:
@@ -60,6 +98,7 @@ def render_flow_paths(r: AnalysisResult) -> None:
                               format_func=lambda i: f"{KIND_LABELS[flows[i].kind]} · {flows[i].file}:{flows[i].line}")
     st.graphviz_chart(flow_dot(flows[choice]), width="stretch")
     st.caption("Sarı: girdinin geldiği yer · gri: değerin geçtiği değişken ve fonksiyonlar · kırmızı: tehlikeli çağrı.")
+    _render_flow_fix(r, flows[choice])
 
 
 def render_badge(r: AnalysisResult) -> None:

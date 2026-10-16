@@ -23,16 +23,17 @@ def _signed(value: int) -> str:
     return "±0" if value == 0 else f"{value:+d}"
 
 
-def _issue_line(issue: Issue) -> str:
+def _issue_line(issue: Issue, fixable: set[str] = frozenset()) -> str:
     where = ", ".join(f"`{loc}`" for loc in issue.locations[:2]) + (" …" if len(issue.locations) > 2 else "")
-    return f"- {SEVERITY_ICONS[issue.severity]} **{SEVERITY_LABELS[issue.severity]}** · {issue.title}" + (f" — {where}" if where else "")
+    fix = " · 🔧 otomatik düzeltme var" if issue.rule_id in fixable else ""
+    return f"- {SEVERITY_ICONS[issue.severity]} **{SEVERITY_LABELS[issue.severity]}** · {issue.title}" + (f" — {where}" if where else "") + fix
 
 
-def _issue_list(title: str, issues: list[Issue]) -> list[str]:
+def _issue_list(title: str, issues: list[Issue], fixable: set[str] = frozenset()) -> list[str]:
     if not issues:
         return []
     more = [f"- … ve {len(issues) - LIST_LIMIT} bulgu daha"] if len(issues) > LIST_LIMIT else []
-    return [f"### {title} ({len(issues)})", "", *(_issue_line(i) for i in issues[:LIST_LIMIT]), *more, ""]
+    return [f"### {title} ({len(issues)})", "", *(_issue_line(i, fixable) for i in issues[:LIST_LIMIT]), *more, ""]
 
 
 def _category_table(comparison: Comparison) -> list[str]:
@@ -40,10 +41,10 @@ def _category_table(comparison: Comparison) -> list[str]:
     return ["| Kategori | Önce | Sonra | Fark |", "|---|---:|---:|---:|", *rows, ""]
 
 
-def _changes(comparison: Comparison) -> list[str]:
+def _changes(comparison: Comparison, fixable: set[str]) -> list[str]:
     if not comparison.added and not comparison.resolved:
         return ["Bu değişiklik yeni bir bulgu eklemiyor ve mevcut bulgulardan birini gidermiyor.", ""]
-    return _issue_list("Yeni bulgular", comparison.added) + _issue_list("Giderilen bulgular", comparison.resolved)
+    return _issue_list("Yeni bulgular", comparison.added, fixable) + _issue_list("Giderilen bulgular", comparison.resolved)
 
 
 def _gate_lines(gates: list[tuple[str, bool]]) -> list[str]:
@@ -55,7 +56,7 @@ def _open_findings(current: AnalysisResult) -> list[str]:
     if not serious:
         return []
     return ["<details>", f"<summary>Projedeki kritik ve yüksek öncelikli bulgular ({len(serious)})</summary>", "",
-            *(_issue_line(i) for i in serious[:LIST_LIMIT]), "", "</details>", ""]
+            *(_issue_line(i, current.fixes.rules) for i in serious[:LIST_LIMIT]), "", "</details>", ""]
 
 
 def build_pr_comment(current: AnalysisResult, previous: AnalysisResult | None = None,
@@ -66,9 +67,12 @@ def build_pr_comment(current: AnalysisResult, previous: AnalysisResult | None = 
     if previous is not None:
         comparison = compare_reports(previous, current)
         lines += [f"Temel dala göre skor: **{previous.score.overall} → {current.score.overall}** ({_signed(comparison.score_delta)})", ""]
-        lines += _gate_lines(gates or []) + _category_table(comparison) + _changes(comparison)
+        lines += _gate_lines(gates or []) + _category_table(comparison) + _changes(comparison, current.fixes.rules)
     else:
         lines += _gate_lines(gates or []) + [f"{len(current.issues)} bulgu · teknik borç notu {current.debt.rating}", ""]
     lines += _open_findings(current)
+    if current.fixes.files:
+        lines += [f"🔧 {current.fixes.change_count} güvenli düzeltme hazır: `python -m repomentor . --fix-patch duzeltmeler.patch` "
+                  "ile yamayı alıp `git apply duzeltmeler.patch` ile uygulayabilirsiniz.", ""]
     lines.append(f"<sub>{APP_NAME} v{current.version} · kod çalıştırılmadan statik analiz · [Skor nasıl hesaplanır?]({SCORING_URL})</sub>")
     return mask_secrets("\n".join(lines)) + "\n"

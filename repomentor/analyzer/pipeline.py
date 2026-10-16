@@ -128,7 +128,7 @@ def analyze_project(
         career = ai_career or career
 
     progress("Otomatik düzeltme yaması hazırlanıyor…", 0.96)
-    fixes = build_fixes(ctx.project, ctx.issues, run_tools)
+    fixes = build_fixes(ctx.project, ctx.issues, run_tools, ctx.security.taint_flows)
     progress("Rapor hazırlanıyor…", 0.97)
     result = AnalysisResult(
         project=ctx.info,
